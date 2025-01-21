@@ -32,6 +32,6 @@ else
     }
 }
 
-if(hp <= 0) {
+if(character_data.isDead()) {
     game_restart();
 }

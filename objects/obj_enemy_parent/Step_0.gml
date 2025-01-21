@@ -4,6 +4,6 @@ var _move_speed = real(self.move_speed)
 
 move_and_collide(_horizontal, _vertical, [tile_map, obj_enemy_parent], undefined, undefined, undefined, _move_speed, _move_speed);
 
-if(hp <= 0) {
+if(character_data.isDead()) {
     instance_destroy();
 }

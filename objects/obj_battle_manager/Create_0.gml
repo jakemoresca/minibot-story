@@ -13,7 +13,7 @@ player_attack = function(_damage)
 
 check_for_end = function() 
 {
-    return (obj_battle_player.data.hp <= 0 or obj_battle_enemy.data.hp <= 0);
+    return (obj_battle_player.data.character_data.isDead() or obj_battle_enemy.data.character_data.isDead());
 }
 
 alarm[3] = 10; // start player wait phase
