@@ -1,5 +1,5 @@
 // player phase
-obj_battle_enemy.data.character_data.takeDamage(damage_to_enemy);
+//obj_battle_enemy.data.character_data.takeDamage(damage_to_enemy);
 
 if(check_for_end())
 {

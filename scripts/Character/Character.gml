@@ -7,7 +7,8 @@ function Character(name, pwr, precision, durability) constructor
     
     self.hp = 38 + (6 * pwr) + (3 * precision) + (8 * durability) + (16 * min(pwr, precision, durability)); 
     self.hp_total = hp; 
-    self.energy = 100; 
+    self.energy = 100;
+    self.energy_total = self.energy;
     self.armor_health = 1.3 * (durability); 
     self.accuracy = (3 * precision) / (pwr + precision + durability);
     
@@ -26,6 +27,24 @@ function Character(name, pwr, precision, durability) constructor
         self.hp -= max(_damage - _armor, 0);
     }
     
+    self.reduceEnergy = function(_energy)
+    {
+        self.energy -= _energy;
+    }
+    
+    self.takeSkillEffect = function(skillEffect)
+    {
+        if(skillEffect.damage != 0)
+        {
+            self.takeDamage(skillEffect.damage);
+        }
+        
+        if(skillEffect.energyCost != 0)
+        {
+            self.reduceEnergy(skillEffect.energyCost);
+        }
+    }
+    
     self.chooseActiveSkill = function() 
     {
         var _active_skills = self.active_skills;
@@ -34,14 +53,12 @@ function Character(name, pwr, precision, durability) constructor
         return chosen_skill;
     }
     
-    self.executeSkill = function(target, skill)
+    self.chooseDefensiveSkill = function()
     {
-        switch(skill.skill_type)
-        {
-            case SkillType().ActiveSkillType:
-                executeActiveSkill(target, skill);
-                break;
-        }
+        var _defensive_skills = self.defensive_skills;
+        var chosen_index = irandom_range(0, ds_list_size(_defensive_skills) - 1);
+        var chosen_skill = _defensive_skills[| chosen_index];
+        return chosen_skill;
     }
     
     self.willHit = function(_accuracy)
@@ -49,22 +66,35 @@ function Character(name, pwr, precision, durability) constructor
         return random(1) < _accuracy;
     }
     
-    function executeActiveSkill(target, skill)
+    self.executeActiveSkill = function(target, skill)
     {
         var _accuracy = skill.calculate_accuracy(self)
         
         if (self.willHit(accuracy))
         {
+            var _skillEffects = skill.calculateSkillEffects(self, target);
             
+            var _defensive_skill = target.chooseDefensiveSkill();
+            _defensive_skill.calculateSkillEffects(self, target, _skillEffects, _defensive_skill);
+            
+            for (var i = 0; i < array_length(_skillEffects); i++) 
+            {
+                var _skillEffect = array_get(_skillEffects, i);
+                
+                if(_skillEffect.targetOpponent)
+                {
+                    target.takeSkillEffect(_skillEffect);
+                }
+                
+                if(_skillEffect.targetSelf)
+                {
+                    self.takeSkillEffect(_skillEffect);
+                }
+            }
         }
     }
     
-    function executeDefensiveSkill(skill)
-    {
-        
-    }
-    
-    function executePassiveSkill(skill)
+    function executePassiveSkill(target, skill, skillEffects)
     {
         
     }
@@ -115,7 +145,10 @@ function RobotCharacter(name, pwr, precision, durability, skills, strategy, part
     ds_list_copy(self.skills, skills); // ds_list of active, defensive, passive skills 
     
     self.strategy = strategy; // Offensive, Defensive, Balanced 
-    self.parts = parts; // ds_map includes body, armor, weapons 
+    self.parts = parts; // ds_map includes body, armor, weapons
+    
+    var defensiveDoNothing = GetSkill(SkillDB_Id().Defensive_DoNothing)
+    ds_list_add(self.skills, defensiveDoNothing);
     
     self.refreshSkills();
 }
